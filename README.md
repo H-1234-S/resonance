@@ -84,45 +84,46 @@ npm install
 ### 2. Configure environment
 
 ```bash
-cp .env.example .env.local
+cp .env.example .env
 ```
 
-```env
-# Database
-DATABASE_URL="postgresql://..."
+Fill in the blank values in `.env`. Sensible defaults (Clerk routes, Polar meter names, `APP_URL`, etc.) are pre-filled.
 
-# Chatterbox TTS (Modal)
-CHATTERBOX_API_URL="https://your-modal-endpoint.modal.run"
-CHATTERBOX_API_KEY="your-api-key"
+### 3. Set up Polar billing
 
-# Clerk
-CLERK_SECRET_KEY="sk_..."
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="pk_..."
-NEXT_PUBLIC_CLERK_SIGN_IN_URL="/sign-in"
-NEXT_PUBLIC_CLERK_SIGN_UP_URL="/sign-up"
+In your [Polar](https://cwa.run/polar) dashboard, create two **meters** under **Meters**:
 
-# Cloudflare R2
-R2_ACCOUNT_ID="your-account-id"
-R2_ACCESS_KEY_ID="your-access-key"
-R2_SECRET_ACCESS_KEY="your-secret-key"
-R2_BUCKET_NAME="your-bucket-name"
+1. **Voice Creation** meter
+   - Filter: Name equals `voice_creation`
+   - Aggregation: **Count**
 
-# Polar (Billing)
-POLAR_ACCESS_TOKEN="your-polar-token"
-POLAR_SERVER="sandbox"
-POLAR_PRODUCT_ID="your-product-id"
+2. **Text-to-Speech Characters** meter
+   - Filter: Name equals `tts_generation`
+   - Aggregation: **Sum** over `characters`
 
-# App
-APP_URL="http://localhost:3000"
-```
+Then create a new **product** with **Recurring subscription** pricing. Under **Price Type**, add two metered prices:
 
-### 3. Set up the database
+1. Click **Add metered price** and select the **Text-to-Speech Characters** meter
+   - Set the **Amount per unit** (price per character, e.g. `$0.003`)
+   - Optionally set a **Cap amount** (e.g. `$100`)
+
+2. Click **Add metered price** again and select the **Voice Creation** meter
+   - Set the **Amount per unit** (price per voice generation, e.g. `$0.25`)
+   - Optionally set a **Cap amount** (e.g. `$100`)
+
+With only metered prices, the subscription starts at **$0/month** and scales with usage. If you want a baseline subscription fee (e.g. $20/month), add a third price to the same product — select a **fixed price** instead of a metered price. This requires no code changes since fixed prices are handled entirely by Polar.
+
+Ensure **Allow multiple subscriptions** is turned **off** under **Settings > Billing** (this is the Polar default).
+
+Copy the product ID into `POLAR_PRODUCT_ID`. The meter filter names and aggregation property must match the `POLAR_METER_*` env variables.
+
+### 4. Set up the database
 
 ```bash
 npx prisma migrate deploy
 ```
 
-### 4. Deploy the TTS engine
+### 5. Deploy the TTS engine
 
 The included `chatterbox_tts.py` is adapted from [Modal's official Chatterbox TTS example](https://cwa.run/modal-tts), modified to read voice reference audio directly from your R2 bucket instead of a Modal Volume.
 
@@ -157,7 +158,7 @@ Once deployed, generate the type-safe Chatterbox client from the OpenAPI spec:
 npm run sync-api
 ```
 
-### 5. Seed voices
+### 6. Seed voices
 
 ```bash
 npx prisma db seed
@@ -165,7 +166,7 @@ npx prisma db seed
 
 Seeds 20 built-in voices to the database and R2. The system voice WAV files are included in the repository and originate from [Modal's voice sample pack](https://modal-cdn.com/blog/audio/chatterbox-tts-voices.zip).
 
-### 6. Run
+### 7. Run
 
 ```bash
 npm run dev

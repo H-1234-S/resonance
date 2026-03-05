@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { parseBuffer } from "music-metadata";
 import { z } from "zod";
 import { polar } from "@/lib/polar";
+import { env } from "@/lib/env";
 import { prisma } from "@/lib/db";
 import { uploadAudio } from "@/lib/r2";
 import { VOICE_CATEGORIES } from "@/features/voices/data/voice-categories";
@@ -169,7 +170,7 @@ export async function POST(request: Request) {
     .ingest({
       events: [
         {
-          name: "voice_creation",
+          name: env.POLAR_METER_VOICE_CREATION,
           externalCustomerId: orgId,
           metadata: {},
           timestamp: new Date(),

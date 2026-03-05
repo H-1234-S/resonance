@@ -1,6 +1,7 @@
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
 import { polar } from "@/lib/polar";
+import { env } from "@/lib/env";
 import { TRPCError } from "@trpc/server";
 import { chatterbox } from "@/lib/chatterbox-client";
 import { prisma } from "@/lib/db";
@@ -212,9 +213,9 @@ export const generationsRouter = createTRPCRouter({
         .ingest({
           events: [
             {
-              name: "tts_generation",
+              name: env.POLAR_METER_TTS_GENERATION,
               externalCustomerId: ctx.orgId,
-              metadata: { characters: input.text.length },
+              metadata: { [env.POLAR_METER_TTS_PROPERTY]: input.text.length },
               timestamp: new Date(),
             },
           ],
