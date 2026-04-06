@@ -133,7 +133,7 @@ const router = createTRPCRouter({
 });
 ```
 
-### 1.2.4 Middleware（中间件）
+### 1.2.4 [Middleware（中间件）]((https://trpc.io/docs/server/middlewares))
 
 Middleware 用于在 Procedure 执行前后添加逻辑：
 
@@ -226,8 +226,11 @@ src/
 ## 1.6 思考题
 
 1. tRPC 和传统的 REST API 相比，主要优势是什么？
+  实现了端到端的类型安全
 2. 什么时候应该使用 query？什么时候应该使用 mutation？
+  GET请求用query，其余请求类型用mutation
 3. Middleware 可以用来实现哪些功能？
+  middleware中间件用来实现验证之类的，例如登录验证，配合auth函数
 
 ## 1.7 下节课预告
 

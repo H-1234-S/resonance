@@ -220,6 +220,65 @@ getAll: orgProcedure
   }),
 ```
 
+### 3.4.4 FAQ：Prisma where 参数
+
+**Q：where 里可以接收的参数有哪些？**
+
+A：Prisma `findMany` 的 `where` 支持以下参数：
+
+```typescript
+where: {
+  // 1. 字段精确匹配
+  id: "xxx",
+  id: { not: "xxx" },
+  id: { in: ["a", "b"] },
+  id: { notIn: ["a", "b"] },
+
+  // 2. 比较运算符
+  age: { gt: 18, gte: 21, lt: 65, lte: 64 },
+
+  // 3. 模糊匹配
+  name: { contains: "abc" },
+  name: { startsWith: "pre", endsWith: "suf" },
+  name: { mode: "insensitive" },  // 大小写不敏感
+
+  // 4. 逻辑操作
+  AND: [{ condition1 }, { condition2 }],
+  // AND 要求数组中的所有条件必须同时满足，记录才会被返回。
+  OR: [{ condition1 }, { condition2 }],
+  // OR 要求数组中的只要有一个条件满足，记录就会被返回。
+  NOT: [{ condition }],
+  // NOT 用来排除满足特定条件的记录。
+
+  // 5. 关系查询
+  owner: { id: "xxx" },
+  owner: { is: { id: "xxx" } },      // 关系存在
+  owner: { isNot: { id: "xxx" } },   // 关系不存在
+}
+```
+
+**示例解析（你的代码）：**
+
+```typescript
+where: {
+  orgId: ctx.orgId,           // 精确匹配组织
+  ...searchFilter,            // 展开搜索条件
+}
+```
+
+其中 `searchFilter` 是：
+
+```typescript
+{
+  OR: [
+    { name: { contains: "搜索词", mode: "insensitive" } },
+    { description: { contains: "搜索词", mode: "insensitive" } }
+  ]
+}
+```
+
+这表示：在当前组织内，搜索名字或描述包含关键词的记录。
+
 ## 3.5 Mutation 的实现
 
 Mutation 用于修改数据，会创建、更新或删除资源。
@@ -472,6 +531,7 @@ polar.events.ingest(...).catch(() => {});
 
 1. 在 `create` mutation 中，为什么要先检查订阅状态？
 2. 如果没有 `variant: "CUSTOM"` 的检查，会出现什么问题？
+  用户只能删除自己创建的声音，不能删除系统声音
 3. 为什么要使用 `.catch(() => {})` 处理存储删除失败？
 
 ## 3.9 下节课预告
