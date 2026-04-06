@@ -2,7 +2,7 @@
 
 import { useStore } from "@tanstack/react-form";
 
-import { 
+import {
   VOICE_CATEGORY_LABELS
 } from "@/features/voices/data/voice-categories";
 
@@ -24,27 +24,30 @@ import { useTTSVoices } from "../contexts/tts-voices-context";
 import { ttsFormOptions } from "./text-to-speech-form";
 
 export function VoiceSelector() {
-  const { 
-    customVoices, 
-    systemVoices, 
-    allVoices: voices
+  const {
+    customVoices,
+    systemVoices,
+    allVoices: voices // 重命名为 voices 
   } = useTTSVoices();
 
   const form = useTypedAppFormContext(ttsFormOptions);
   const voiceId = useStore(form.store, (s) => s.values.voiceId);
   const isSubmitting = useStore(form.store, (s) => s.isSubmitting);
 
+  // 1. 从 voices 数组中查找用户选中的声音
   const selectedVoice = voices.find((v) => v.id === voiceId);
+  // 2. 判断选中的声音是否还存在（可能被删除了）
   const hasMissingSelectedVoice = Boolean(voiceId) && !selectedVoice;
+  // 3. 确定最终显示的声音
   const currentVoice = selectedVoice
-    ? selectedVoice
+    ? selectedVoice                        // 情况1：选中的声音存在，用它
     : hasMissingSelectedVoice
-      ? {
+      ? {                                 // 情况2：选中的声音不存在（被删了），显示占位符
         id: voiceId,
         name: "Unavailable voice",
         category: null as null,
       }
-      : voices[0];
+      : voices[0];                        // 情况3：没有选中，用第一个声音作为默认
 
   return (
     <Field>
@@ -58,7 +61,7 @@ export function VoiceSelector() {
           <SelectValue>
             {currentVoice && (
               <>
-                <VoiceAvatar 
+                <VoiceAvatar
                   seed={currentVoice.id}
                   name={currentVoice.name}
                 />

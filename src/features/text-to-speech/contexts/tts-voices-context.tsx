@@ -1,3 +1,5 @@
+// TTSVoicesContext.tsx
+// 这个文件定义了一个 React 上下文，用于在文本转语音功能中管理和提供可用的语音列表（包括自定义语音和系统语音）。它包含一个上下文提供者组件（TTSVoicesProvider）和一个自定义钩子（useTTSVoices）来访问上下文中的数据。
 "use client";
 
 import { createContext, useContext } from "react";
