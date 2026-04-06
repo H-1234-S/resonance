@@ -100,7 +100,6 @@ dehydrate: {
     query.state.status === 'pending',  // 也序列化 pending 状态
 },
 ```
-
 **hydrate（水合）**
 
 客户端收到服务端的数据后，需要"水合"（反序列化）来使用。
@@ -110,6 +109,90 @@ hydrate: {
   deserializeData: superjson.deserialize,  // 反序列化
 },
 ```
+
+### 4.3.2 为什么要这么配置？
+
+#### 1. makeQueryClient 的作用
+
+在 SSR（服务端渲染）中，每个请求都应该拥有一个独立的 QueryClient 实例，以防止不同用户之间的数据污染。这个函数就是一个"工厂"，每次调用都会产生一个新的、配置好的管理中心。
+
+#### 2. staleTime: 30 * 1000
+
+数据在 30 秒内被认为是"新鲜"的。作用：在这 30 秒内，如果你多次打开同一个页面或组件，React Query 会直接从缓存里拿数据，而不会去请求后端 API。这能极大地提高性能并减轻服务器压力。
+
+#### 3. dehydrate（脱水）- 发生在服务器
+
+"脱水"是一个形象的比喻。服务器获取了数据，但它无法直接把复杂的 JavaScript 对象（包含函数、日期等）传给浏览器。
+
+- **serializeData: superjson.serialize** - 服务器把内存里的数据"榨干"成字符串
+- **shouldDehydrateQuery** - 决定哪些数据要传给前端
+  - `defaultShouldDehydrateQuery(query)` - 默认只传成功的请求
+  - `query.state.status === 'pending'` - 即使请求还没完成（还在加载中），也把这个"状态"传给前端，让前端接手继续加载，避免服务器卡死
+
+#### 4. hydrate（水合）- 发生在浏览器
+
+浏览器收到服务器传来的"干巴巴"的字符串后，需要把它"还原"回活生生的 JavaScript 对象。
+
+- **deserializeData: superjson.deserialize** - 把字符串还原成对象
+
+#### 5. 为什么需要 superjson？
+
+普通的 JSON.stringify 极其笨拙：
+- 它不能处理 Date 对象（会变成字符串）
+- 它不能处理 Map、Set、undefined 或 BigInt
+
+superjson 就像是一个高级打包机，它能确保服务器上的 `new Date()` 传到浏览器后，依然是一个真正的 Date 对象，而不是一串日期字符串。
+
+#### 6. 整体工作流程
+
+```
+服务器端：调用 makeQueryClient → 请求数据 → 使用 superjson 将数据脱水成 JSON
+     ↓
+传输：JSON 随 HTML 一起发送到浏览器
+     ↓
+浏览器端：React Query 接管 HTML → 使用 superjson 将 JSON 水合还原成内存对象
+
+结果：用户感觉页面瞬间就加载好了，且点击切换时由于有 30 秒缓存，反应极快
+```
+
+---
+### FAQ：为什么不直接用 props 传给 Client Components？
+**Q：Next.js 的 Server Components 组件不是可以直接拿到数据吗？为什么不直接渲染或者用 props 和 context 传给 Client Components？**
+A：两种方式都可以，各有适用场景：
+### 方式1：直接用 props（Server Components）
+```typescript
+// app/page.tsx (Server Component)
+async function Page() {
+  const voices = await getVoices();  // 直接查询
+  return <VoiceList voices={voices} />;  // 通过 props 传给客户端
+}
+```
+### 方式2：React Query（项目中的方式）
+```typescript
+// app/page.tsx (Server Component)
+async function Page() {
+  const queryClient = makeQueryClient();
+  await queryClient.prefetchQuery(...)  // 预取数据
+  const dehydratedState = dehydrate(queryClient);
+  return (
+    <HydrationBoundary state={dehydratedState}>
+      <VoiceList />
+    </HydrationBoundary>
+  );
+}
+```
+### 对比
+| 场景 | 直接 props | React Query |
+|------|-----------|-------------|
+| 页面内跳转 | 重新请求 | 用缓存，不请求 |
+| 用户交互刷新 | 父组件重新渲染 | 组件自己管理 |
+| 多个组件用同一数据 | 需要层层传递 | 各组件独立订阅 |
+| 加载/错误状态 | 需要自己处理 | 内置状态管理 |
+### 什么时候用什么？
+- **props 方式**：简单页面，数据不需要频繁刷新
+- **React Query**：需要频繁交互、数据刷新、缓存优化
+
+---
 
 ## 4.4 客户端 Provider 实现
 
