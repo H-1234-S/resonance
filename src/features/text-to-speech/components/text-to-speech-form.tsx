@@ -30,6 +30,7 @@ export const defaultTTSValues: TTSFormValues = {
   repetitionPenalty: 1.2,
 };
 
+// 使用 formOptions 创建一个表单选项对象,可复用
 export const ttsFormOptions = formOptions({
   defaultValues: defaultTTSValues,
 });
@@ -51,6 +52,8 @@ export function TextToSpeechForm({
 
   const form = useAppForm({
     ...ttsFormOptions,
+    // 如果父组件传入了 defaultValues，就使用它
+    // 否则就使用默认的 defaultTTSValues
     defaultValues: defaultValues ?? defaultTTSValues,
     validators: {
       onSubmit: ttsFormSchema,

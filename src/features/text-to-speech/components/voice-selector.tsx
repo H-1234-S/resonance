@@ -76,6 +76,8 @@ export function VoiceSelector() {
           </SelectValue>
         </SelectTrigger>
         <SelectContent>
+          {/* 只有当用户之前选中的声音已被删除时才显示，
+          显示为 "Unavailable voice"，表示该声音已不可用 */}
           {hasMissingSelectedVoice && currentVoice && (
             <>
               <SelectGroup>
@@ -97,6 +99,7 @@ export function VoiceSelector() {
               )}
             </>
           )}
+          {/* Custom Voices */}
           {customVoices.length > 0 && (
             <SelectGroup>
               <SelectLabel>Team Voices</SelectLabel>
@@ -113,6 +116,7 @@ export function VoiceSelector() {
           {customVoices.length > 0 && systemVoices.length > 0 && (
             <SelectSeparator />
           )}
+          {/* System Voices */}
           {systemVoices.length > 0 && (
             <SelectGroup>
               <SelectLabel>Built-in Voices</SelectLabel>

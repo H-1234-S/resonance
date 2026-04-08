@@ -20,6 +20,10 @@ import { GenerateButton } from "./generate-button";
 import { PromptSuggestions } from "./prompt-suggestions";
 
 export function TextInputPanel() {
+
+  // 传递的是类型 类似于 useTypedAppFormContext<typeof ttsFormOptions>()
+  // 使用 formOptions 作为类型标识，将表单的泛型信息传递给 Context Hook，从而保证类型安全
+  // 只更改一处 ttsFormOptions 的定义，就能在整个表单相关的组件中获得正确的类型提示和检查，避免了重复定义类型或手动维护类型的一致性问题。
   const form = useTypedAppFormContext(ttsFormOptions);
 
   const text = useStore(form.store, (s) => s.values.text);

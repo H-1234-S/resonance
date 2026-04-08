@@ -28,11 +28,9 @@ export function TextToSpeechView({
 
   // 合并自定义语音和系统语音为一个总的语音列表，方便后续查找和使用
   const allVoices = [...customVoices, ...systemVoices];
-  // 兜底
   const fallbackVoiceId = allVoices[0]?.id ?? "";
 
   //  根据 initialValues 中的 voiceId 来确定最终使用哪个 voiceId。如果 initialValues 中的 voiceId 存在并且在 allVoices 中找得到，就用它；否则就用 fallbackVoiceId 作为默认值。
-
   const resolvedVoiceId =
     initialValues?.voiceId &&
       // some检测数组中是否“至少有一个”元素满足指定的条件。

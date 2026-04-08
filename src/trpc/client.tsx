@@ -9,6 +9,7 @@ import { makeQueryClient } from './query-client';
 import type { AppRouter } from './routers/_app';
 import superjson from "superjson";
 export const { TRPCProvider, useTRPC } = createTRPCContext<AppRouter>();
+
 let browserQueryClient: QueryClient;
 function getQueryClient() {
   if (typeof window === 'undefined') {
@@ -30,6 +31,7 @@ function getUrl() {
   })();
   return `${base}/api/trpc`;
 }
+// TRPCReactProvider 组件是一个 React 组件，用于在应用程序中提供 TRPC 客户端和 React Query 客户端的上下文。它确保在服务器端和客户端都能正确地创建和使用这些客户端实例，以便在应用程序中进行数据获取和状态管理。
 export function TRPCReactProvider(
   props: Readonly<{
     children: React.ReactNode;
@@ -51,6 +53,8 @@ export function TRPCReactProvider(
     }),
   );
   return (
+    // 在 React 组件树中传递QueryClient和TRPCClient实例，使得子组件可以通过上下文访问它们
+    // 这是React Query和TRPC的核心机制，允许我们在应用程序中进行数据获取和状态管理。
     <QueryClientProvider client={queryClient}>
       <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
         {props.children}

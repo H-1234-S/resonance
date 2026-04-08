@@ -254,13 +254,17 @@ function getUrl() {
 
 ### 4.4.3 tRPC Client 配置
 
+**补充：** 该useState里的回调函数只会在组件 render 时执行一次
+
+**补充：** 利用 useState 的惰性初始化特性，确保这个客户端实例只会被创建一次。
+
 ```typescript
 const [trpcClient] = useState(() =>
   createTRPCClient<AppRouter>({
     links: [
       httpBatchLink({
-        transformer: superjson,
-        url: getUrl(),
+        transformer: superjson,  // 复杂数据传输
+        url: getUrl(),  // 表示请求发送到哪里；使用函数是不同环境请求发送url不同
       }),
     ],
   }),
@@ -471,6 +475,12 @@ export const trpc = createTRPCOptionsProxy({
 });
 ```
 
+getQueryClient 会产生两个不同的queryClient实例
+
+服务端的实例用来**预取数据**，通过 **HydrateClient 脱水**传给客户端
+
+客户端用 client.tsx 的 queryClient 接收（hydrate）这些数据
+
 ### 4.6.1 createTRPCOptionsProxy
 
 这个函数创建了一个代理对象，让我们可以在服务端"调用" Procedure：
@@ -604,8 +614,13 @@ export function VoicesView() {
 ## 4.9 思考题
 
 1. 为什么浏览器端使用单例 Query Client，而服务端每次创建新的？
+  浏览器端使用单例，统一管理用户的异步状态
+  服务端每次创新是为了不同用户的异步状态可以相互独立
+  每次请求进来都会运行该文件代码，如果不创新的实例那么a用户就会拿到b用户的数据
 2. httpBatchLink 批量处理请求有什么好处？
+  用于网络性能优化，减少资源占用，比如将多次的tcp连接变为一次的tcp连接
 3. useSuspenseQuery 和普通的 useQuery 有什么区别？
+  会自动处理loading状态；SSR服务器端数据预取，useQuery只能按需获取
 
 ## 4.10 下节课预告
 
