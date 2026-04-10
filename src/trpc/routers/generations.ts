@@ -81,6 +81,7 @@ export const generationsRouter = createTRPCRouter({
       const voice = await prisma.voice.findUnique({
         where: {
           id: input.voiceId,
+          // 匹配系统预设的声音或用户自定义的声音
           OR: [
             { variant: "SYSTEM" },
             { variant: "CUSTOM", orgId: ctx.orgId, }

@@ -620,7 +620,7 @@ export function VoicesView() {
 2. httpBatchLink 批量处理请求有什么好处？
   用于网络性能优化，减少资源占用，比如将多次的tcp连接变为一次的tcp连接
 3. useSuspenseQuery 和普通的 useQuery 有什么区别？
-  会自动处理loading状态；SSR服务器端数据预取，useQuery只能按需获取
+  会自动处理loading状态；SSR服务器端数据预取，**useQuery只能按需获取**
 
 ## 4.10 下节课预告
 
