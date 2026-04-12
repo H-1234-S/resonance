@@ -197,6 +197,121 @@ const [status, setStatus] = useQueryState(
 );
 ```
 
+## 批量更新 (useQueryStates)
+
+当需要同时管理多个搜索参数时，可以使用 `useQueryStates`：
+
+```tsx
+import { useQueryStates, parseAsFloat, parseAsInteger } from 'nuqs';
+
+function MapComponent() {
+  const [coords, setCoords] = useQueryStates({
+    lat: parseAsFloat.withDefault(45.18),
+    lng: parseAsFloat.withDefault(5.72),
+    zoom: parseAsInteger.withDefault(10)
+  });
+
+  // 批量更新所有参数
+  const updateAll = () => {
+    setCoords({ lat: 40.71, lng: -74.01, zoom: 12 });
+  };
+
+  return (
+    <div>
+      <p>Lat: {coords.lat}</p>
+      <p>Lng: {coords.lng}</p>
+      <p>Zoom: {coords.zoom}</p>
+    </div>
+  );
+}
+```
+
+## 选项配置 (Options)
+
+### history 历史模式
+
+```tsx
+// 默认：replace（替换当前历史记录）
+useQueryState('query', parseAsString);
+
+// push（添加新历史记录，可使用浏览器后退按钮）
+useQueryState('query', {
+  ...parseAsString,
+  history: 'push'
+});
+```
+
+### shallow 浅层路由
+
+```tsx
+// 默认 true：不触发服务端渲染
+useQueryState('query', parseAsString);
+
+// false：触发服务端重新渲染（RSC）
+useQueryState('query', {
+  ...parseAsString,
+  shallow: false
+});
+```
+
+### scroll 滚动
+
+```tsx
+// 默认 false：不滚动到顶部
+useQueryState('page', parseAsInteger);
+
+// true：滚动到页面顶部
+useQueryState('page', {
+  ...parseAsInteger,
+  scroll: true
+});
+```
+
+### clearOnDefault 清除默认值
+
+```tsx
+// 默认 true：值为默认值时从 URL 中移除参数
+useQueryState('search', {
+  defaultValue: '',
+  clearOnDefault: true
+});
+
+// false：保留 URL 参数
+useQueryState('search', {
+  defaultValue: '',
+  clearOnDefault: false
+});
+```
+
+### throttle / debounce 节流防抖
+
+```tsx
+import { throttle, debounce } from 'nuqs';
+
+// 节流：立即更新，后续每 500ms 更新一次
+useQueryState('page', {
+  ...parseAsInteger,
+  limitUrlUpdates: throttle(500)
+});
+
+// 防抖：等待 500ms 无操作后再更新
+useQueryState('search', {
+  ...parseAsString,
+  limitUrlUpdates: debounce(500)
+});
+```
+
+### 局部覆盖选项
+
+在调用 setter 时可以局部覆盖选项：
+
+```tsx
+const [query, setQuery] = useQueryState('query', parseAsString);
+
+// 这次更新添加历史记录，其他使用默认的 replace
+setQuery('new value', { history: 'push' });
+```
+
 ## 在本项目中的实际用法
 
 参考项目中的 voices 模块：
@@ -240,7 +355,24 @@ const url = `/voices?${voicesSearchParamsCache.serialize({ query: "hello" })}`;
 - **在客户端构建跳转链接**时复用解析器逻辑，保证类型一致
 - **避免在每个组件中重复定义解析器**
 
-### 2. 服务端预取
+### 2. 服务端预取（Server Component）
+
+在 Next.js App Router 中，页面组件是 Server Component，可以通过 `nuqs/server` 导出的类型和函数来解析 URL 参数。
+
+**SearchParams 类型**：
+```tsx
+import type { SearchParams } from 'nuqs/server';
+
+// Next.js App Router 的 searchParams 是 Promise<SearchParams>
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}) {
+  const params = await searchParams;
+  // params.get('key') 返回 string | null
+}
+```
 
 ```tsx
 // src/app/(dashboard)/voices/page.tsx
@@ -341,6 +473,67 @@ export default function RootLayout({
     </html>
   );
 }
+```
+
+### Adapter Props（全局配置）
+
+`<NuqsAdapter>` 支持一些全局配置：
+
+```tsx
+import { NuqsAdapter, throttle } from 'nuqs';
+
+<NuqsAdapter
+  defaultOptions={{
+    shallow: false,         // 默认浅层路由
+    scroll: true,          // 默认滚动到顶部
+    clearOnDefault: false,  // 默认不清除
+    limitUrlUpdates: throttle(250)  // 全局节流
+  }}
+  // 处理 URL 参数的中间件
+  processUrlSearchParams={(search) => {
+    // 字母排序
+    search.sort();
+    // 添加时间戳
+    search.set('ts', Date.now().toString());
+    return search;
+  }}
+>
+  {children}
+</NuqsAdapter>
+```
+
+| Prop | 说明 |
+|------|------|
+| `defaultOptions` | 全局默认选项 |
+| `processUrlSearchParams` | URL 更新前的处理函数 |
+
+## nuqs/server 服务端 API
+
+`nuqs/server` 专门用于服务端环境，导出以下内容：
+
+| 导出 | 用途 |
+|------|------|
+| `SearchParams` | 类型，Next.js 传入的 URL 参数对象 |
+| `createSearchParamsCache` | 创建参数缓存，用于解析/序列化 |
+| `parseAsString` | 字符串解析器 |
+| `parseAsInteger` | 整数解析器 |
+| `parseAsFloat` | 浮点数解析器 |
+| `parseAsBoolean` | 布尔解析器 |
+
+## useQueryStates vs useQueryState
+
+项目中只使用了 `useQueryState`，但 `useQueryStates` 管理多个参数更高效：
+
+```tsx
+// 项目中的用法：多个 useQueryState
+const [query] = useQueryState('query', parseAsString);
+const [page] = useQueryState('page', parseAsInteger);
+
+// 推荐的用法：useQueryStates 批量管理
+const [{ query, page }, setParams] = useQueryStates({
+  query: parseAsString.withDefault(''),
+  page: parseAsInteger.withDefault(1)
+});
 ```
 
 ## 优缺点总结
