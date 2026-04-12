@@ -46,8 +46,11 @@ next-env.d.ts
 
 /src/generated/prisma
 
-__pycache__
+# 忽略所有的 Python 缓存文件夹
+__pycache__/
+*.py[cod]
 
+# 忽略特定的文件
 chatterbox_tts.py
 
 # Sentry Config File
