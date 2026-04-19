@@ -1,19 +1,33 @@
+/**
+ * 浏览器麦克风录音 Hook。
+ * - 使用 RecordRTC 输出单声道 WAV（44.1kHz）。
+ * - 使用 WaveSurfer Record 插件在同一 MediaStream 上绘制实时波形（需将 containerRef 绑到 DOM）。
+ */
+
 import { useState, useRef, useCallback, useEffect } from "react";
 import type RecordRTCType from "recordrtc";
 import WaveSurfer from "wavesurfer.js";
 import RecordPlugin from "wavesurfer.js/dist/plugins/record.esm.js";
 
 export function useAudioRecorder() {
+  // UI 状态
   const [isRecording, setIsRecording] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
+  
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // RecordRTC / 麦克风流 / 计时器
   const recorderRef = useRef<RecordRTCType | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  // ReturnType TS内置工具类型，作用获取函数的返回值类型
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  /** 波形画布挂载点，由使用方传入 */
   const containerRef = useRef<HTMLDivElement>(null);
   const wsRef = useRef<WaveSurfer | null>(null);
+
+  /** renderMicStream 返回的句柄，销毁时需先 onDestroy 再 destroy WaveSurfer */
   const micStreamRef = useRef<{ onDestroy: () => void } | null>(null);
 
   const destroyWaveSurfer = useCallback(() => {
@@ -27,6 +41,7 @@ export function useAudioRecorder() {
     }
   }, []);
 
+  /** 释放计时器、录音器、媒体轨道与波形实例，避免泄漏 */
   const cleanup = useCallback(() => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
@@ -40,9 +55,12 @@ export function useAudioRecorder() {
       streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
     }
+
     destroyWaveSurfer();
   }, [destroyWaveSurfer]);
 
+  // isRecording 为 true 且容器已挂载、流已就绪后创建波形图
+  // 与 stream 共用 getUserMedia 的同一轨
   useEffect(() => {
     if (!isRecording || !containerRef.current || !streamRef.current) return;
 
@@ -59,8 +77,9 @@ export function useAudioRecorder() {
       normalize: true,
     });
 
-    wsRef.current = ws
+    wsRef.current = ws;
 
+    // 注册 WaveSurfer Record 插件
     const record = ws.registerPlugin(
       RecordPlugin.create({
         scrollingWaveform: true,
@@ -81,11 +100,12 @@ export function useAudioRecorder() {
       setAudioBlob(null);
       setElapsedTime(0);
 
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        audio: true
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
       });
       streamRef.current = stream;
 
+      // 动态加载 recordrtc，便于代码分割
       const { default: RecordRTC, StereoAudioRecorder } = await import(
         "recordrtc"
       );
@@ -101,10 +121,11 @@ export function useAudioRecorder() {
       recorder.startRecording();
       setIsRecording(true);
 
-      const startTime = Date.now();
-      timerRef.current = setInterval(() => {
-        setElapsedTime((Date.now() - startTime) / 1000);
-      }, 100);
+      // 设置计时器，每 100ms 更新一次已录时长
+        const startTime = Date.now();
+        timerRef.current = setInterval(() => {
+          setElapsedTime((Date.now() - startTime) / 1000);
+        }, 100);
     } catch (err) {
       cleanup();
 
@@ -134,6 +155,7 @@ export function useAudioRecorder() {
     [cleanup],
   );
 
+  /** 取消或重录：不依赖 stop 回调，直接释放资源并清空状态 */
   const resetRecording = useCallback(() => {
     cleanup();
     setIsRecording(false);

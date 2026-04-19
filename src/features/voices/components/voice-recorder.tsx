@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { useAudioPlayback } from "@/hooks/use-audio-playback";
 import { useAudioRecorder } from "@/features/voices/hooks/use-audio-recorder";
 
+// 格式化时间
 function formatTime(seconds: number) {
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
@@ -43,10 +44,13 @@ export function VoiceRecorder({
   } = useAudioRecorder();
 
   const handleStop = () => {
+    // 停止录音，并返回 Blob
     stopRecording((blob) => {
+      // 将 Blob 转换为 File
       const recordedFile = new File([blob], "recording.wav", {
         type: "audio/wav",
       });
+      // 将 File 传递给父组件
       onFileChange(recordedFile);
     });
   };
@@ -84,6 +88,7 @@ export function VoiceRecorder({
           <p className="truncate text-sm font-medium">{file.name}</p>
           <p className="text-xs text-muted-foreground">
             {formatFileSize(file.size)}
+
             {audioBlob && elapsedTime > 0 && (
               <>&nbsp;&middot;&nbsp;{formatTime(elapsedTime)}</>
             )}
@@ -125,6 +130,7 @@ export function VoiceRecorder({
     );
   }
 
+  // 如果正在录音，显示波形图
   if (isRecording) {
     return (
       <div className="flex flex-col overflow-hidden rounded-2xl border">

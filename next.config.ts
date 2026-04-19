@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
   /* config options here */
   devIndicators: false,
   experimental: {
+    // 配置代理请求体大小为20mb
     proxyClientMaxBodySize: "20mb",
   },
 };

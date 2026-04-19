@@ -82,6 +82,7 @@ const voiceCreateFormSchema = z.object({
   description: z.string(),
 });
 
+// 文件拖拽上传
 function FileDropzone({
   file,
   onFileChange,
