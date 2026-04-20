@@ -56,7 +56,7 @@ export const generationsRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ input, ctx }) => {
-      // Check for active subscription before generation
+      // 在生成之前检查 订阅
       try {
         const customerState = await polar.customers.getStateExternal({
           externalId: ctx.orgId,
@@ -71,7 +71,7 @@ export const generationsRouter = createTRPCRouter({
         }
       } catch (err) {
         if (err instanceof TRPCError) throw err;
-        // Customer doesn't exist in Polar yet -> no subscription
+        // 客户在 Polar 中尚不存在 -> 没有订阅
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "SUBSCRIPTION_REQUIRED",
@@ -209,7 +209,7 @@ export const generationsRouter = createTRPCRouter({
         });
       }
 
-      // Ingest usage event to Polar (fire-and-forget, don't block response)
+      // 将使用事件发送到 Polar（一次性操作，不阻塞响应）
       polar.events
         .ingest({
           events: [
@@ -222,7 +222,7 @@ export const generationsRouter = createTRPCRouter({
           ],
         })
         .catch(() => {
-          // Silently fail - don't break the user experience for metering errors
+          // 不要因为计量错误而破坏用户体验
         });
 
       return {

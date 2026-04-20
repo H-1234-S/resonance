@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-    // Check for active subscription before voice creation
+  // 在创建语音之前检查是否有有效订阅
   try {
     const customerState = await polar.customers.getStateExternal({
       externalId: orgId,
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
       return Response.json({ error: "SUBSCRIPTION_REQUIRED" }, { status: 403 });
     }
   } catch {
-    // Customer doesn't exist in Polar yet -> no subscription
+    // 客户在 Polar 中尚不存在 -> 没有订阅
     return Response.json({ error: "SUBSCRIPTION_REQUIRED" }, { status: 403 });
   }
 
@@ -89,7 +89,7 @@ export async function POST(request: Request) {
   const normalizedContentType =
     contentType.split(";")[0]?.trim() || "audio/wav";
 
-  // Validate audio format and duration
+  // 验证音频格式和时长
   let duration: number;
   try {
     const metadata = await parseBuffer(
@@ -156,7 +156,7 @@ export async function POST(request: Request) {
             id: createdVoiceId,
           },
         })
-        .catch(() => {});
+        .catch(() => { });
     }
 
     return Response.json(
@@ -165,7 +165,7 @@ export async function POST(request: Request) {
     );
   }
 
-  // Ingest usage event to Polar (fire-and-forget, don't block response)
+  // 将使用事件发送到 Polar（即发即忘，不阻塞响应）
   polar.events
     .ingest({
       events: [
@@ -178,7 +178,7 @@ export async function POST(request: Request) {
       ],
     })
     .catch(() => {
-      // Silently fail - don't break the user experience for metering errors
+      // 静默失败 - 不要因计量错误破坏用户体验    
     });
 
   return Response.json(
