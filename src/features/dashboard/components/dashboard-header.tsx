@@ -16,7 +16,7 @@ export function DashboardHeader() {
           Nice to see you
         </p>
         <h1 className="text-2xl lg:text-3xl font-semibold tracking-tight">
-          {isLoaded ? (user?.fullName ?? user?.firstName ?? "there") : "..."}
+          {isLoaded ? ( user?.firstName ?? "there") : "..."}
         </h1>
       </div>
 
