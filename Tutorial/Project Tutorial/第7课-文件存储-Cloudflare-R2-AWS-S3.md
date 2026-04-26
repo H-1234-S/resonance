@@ -43,7 +43,7 @@
 
 ### 为什么项目选择 R2？
 
-Resonance 项目选择 Cloudflare R2 而非 AWS S3 的原因：
+VoxClone 项目选择 Cloudflare R2 而非 AWS S3 的原因：
 
 1. **零出口流量费（Egress Fee）**：S3 收取 $0.09/GB 的流出费用，R2 完全免费
 2. **S3 API 兼容**：可以直接使用 AWS SDK，无需学习新 API

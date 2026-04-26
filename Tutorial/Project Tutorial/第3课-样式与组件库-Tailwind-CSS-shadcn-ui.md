@@ -81,7 +81,7 @@ module.exports = {
 
 ### 项目中的 Tailwind 配置解析
 
-Resonance 项目使用 Tailwind CSS v4，配置在 `src/app/globals.css` 中：
+VoxClone 项目使用 Tailwind CSS v4，配置在 `src/app/globals.css` 中：
 
 ```css
 @import "tailwindcss";
@@ -137,7 +137,7 @@ Tailwind v4 的 `@layer base` 定义全局基础样式：
 ## CSS 变量与主题定制
 
 ### oklch 颜色空间
-Resonance 项目使用 `oklch` 颜色空间定义颜色，这是现代 CSS 的最佳实践：
+VoxClone 项目使用 `oklch` 颜色空间定义颜色，这是现代 CSS 的最佳实践：
 
 **为什么选择 oklch？**
 1. **感知均匀**：颜色变化更符合人眼感知

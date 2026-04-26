@@ -22,7 +22,7 @@ PostgreSQL 是一个功能强大的开源关系型数据库管理系统：
 - **高并发**：支持多版本并发控制（MVCC）
 
 ### 为什么选择 PostgreSQL？
-Resonance 项目选择 PostgreSQL 的原因：
+VoxClone 项目选择 PostgreSQL 的原因：
 1. **与 Prisma 完美集成**：Prisma 对 PostgreSQL 支持最完善
 2. **数据完整性**：强类型约束确保数据质量
 3. **开源免费**：无许可费用，社区活跃
