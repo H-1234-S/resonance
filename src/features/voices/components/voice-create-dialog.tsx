@@ -88,7 +88,7 @@ export function VoiceCreateDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       {children && <DialogTrigger asChild>{children}</DialogTrigger>}
-      <DialogContent>
+      <DialogContent className="h-[98vh] overflow-y-auto">
         <DialogHeader className="text-left">
           <DialogTitle>Create custom voice</DialogTitle>
           <DialogDescription>
