@@ -39,14 +39,24 @@ interface VoiceCardProps {
 const regionNames = new Intl.DisplayNames(["en"], { type: "region" });
 
 function parseLanguage(locale: string) {
-  const [, country] = locale.split("-");
-  if (!country) return { flag: "", region: locale };
+  const parts = locale.split("-");
+  const country = parts.length > 1 ? parts[1] : null;
+  if (!country || country.length !== 2) return { flag: "", region: locale };
 
   const flag = [...country.toUpperCase()]
-    .map((c) => String.fromCodePoint(0x1f1e6 + c.charCodeAt(0) - 65))
+    .map((c) => {
+      const code = c.charCodeAt(0) - 65;
+      if (code < 0 || code > 25) return "";
+      return String.fromCodePoint(0x1f1e6 + code);
+    })
     .join("");
 
-  const region = regionNames.of(country) ?? country;
+  let region: string;
+  try {
+    region = regionNames.of(country) ?? country;
+  } catch {
+    region = country;
+  }
 
   return { flag, region };
 };
