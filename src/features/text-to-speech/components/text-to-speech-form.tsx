@@ -79,7 +79,13 @@ export function TextToSpeechForm({
           toast.error("Subscription required", {
             action: {
               label: "Subscribe",
-              onClick: () => checkout(),
+              onClick: () => {
+                try {
+                  checkout()
+                } catch (err) {
+                  console.error("Checkout error:", err);
+                }
+              },
             },
           });
         } else {
